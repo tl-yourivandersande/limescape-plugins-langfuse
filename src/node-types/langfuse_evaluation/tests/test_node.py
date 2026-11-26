@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from limescape_plugin_sdk import CapabilityError, NodeInput
@@ -140,7 +141,7 @@ async def test_dataset_items_follows_pages_filters_and_uses_the_team_credential(
     assert dataset["items"][0]["input"]["zaak"] == {"zaaknummer": "90002"}
     assert dataset["items"][0]["expected_output"] == {"antwoord": 2}
     assert (dataset["count"], dataset["dataset_id"], dataset["dataset_version"]) == (2, DATASET_ID, "2026-10-27T07:52:00.000000Z")
-    assert dataset["run_name"].startswith("voorbeeld-set-20")
+    assert re.fullmatch(r"voorbeeld-set-20\d{6}-\d{6}", dataset["run_name"])
     assert SECRET not in json.dumps(result)
 
 
@@ -153,7 +154,7 @@ async def test_dataset_items_takes_the_selection_from_the_flow_input_and_can_lea
         NODE_DIR, context(server),
         params={"operation": "dataset_items", "dataset_name": "voorbeeld-set", "metadata_filter": "{}",
                 "include_content": "0", "run_name": "vaste-naam"},
-        input_data={"metadata_filter": {"dossier": ["D01", "D03"], "split": ""}, "run_name": "dossier-analyse-v7"},
+        input_data={"metadata_filter": {"dossier": ["D01", "D03"], "split": ""}, "run_name": "dossier-analyse-v7-{timestamp}"},
         output_key="dataset",
     )
 
@@ -162,7 +163,7 @@ async def test_dataset_items_takes_the_selection_from_the_flow_input_and_can_lea
         {"id": "item-1", "dataset_id": DATASET_ID, "dataset_name": "voorbeeld-set", "metadata": {"dossier": "D01", "split": "ontwikkel"}},
         {"id": "item-3", "dataset_id": DATASET_ID, "dataset_name": "voorbeeld-set", "metadata": {"dossier": "D03", "split": "ontwikkel"}},
     ]
-    assert dataset["run_name"] == "dossier-analyse-v7"
+    assert re.fullmatch(r"dossier-analyse-v7-20\d{6}-\d{6}", dataset["run_name"])
 
 
 async def test_dataset_items_without_a_match_fails_instead_of_running_an_empty_experiment():

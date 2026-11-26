@@ -23,17 +23,20 @@ SCORE_DATA_TYPES = ("NUMERIC", "BOOLEAN", "CATEGORICAL", "TEXT")
 SCORE_CONFIG_MODES = ("link", "require", "ignore")
 STATE_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 MAX_SCORES = 200
-# Fields a run can set through the flow input: a non-empty value under the same key in the
-# flow state wins from the value configured on the node. A missing {{ variable }} fails a
-# run, so this is how an optional selection reaches the node.
-INPUT_OVERRIDES = frozenset({"dataset_name", "dataset_version", "metadata_filter", "run_name", "run_description"})
+TIMESTAMP = "{timestamp}"  # in a run name: replaced by the start of the run, UTC
+# Fields of 'Get dataset items' a run can set through the flow input: a non-empty value under
+# the same key in the flow state wins from the value configured on the node. A missing
+# {{ variable }} fails a run, so this is how an optional selection reaches the node. Only that
+# operation looks at the flow input: it is where a run starts, and the later steps take the
+# resolved values (such as the run name) from its result.
+INPUT_OVERRIDES = frozenset({"dataset_name", "dataset_version", "metadata_filter", "run_name"})
 
 
 # --- reading parameters -------------------------------------------------------------
 
 
 def _value(inp: NodeInput, name: str) -> Any:
-    if name in INPUT_OVERRIDES:
+    if name in INPUT_OVERRIDES and inp.param("operation", "dataset_items") == "dataset_items":
         override = inp.input_data.get(name)
         if override not in (None, "", [], {}):
             return override
@@ -139,7 +142,9 @@ async def _dataset_items(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse) -
     if not items:
         raise NodeInputError(f"Dataset '{name}' has no active items that match the selection")
     started = _now()
-    run_name = _text(inp, "run_name") or f"{name}-{started:%Y%m%d-%H%M}"
+    # One run, one name: every item recorded under it lands in the same experiment. The
+    # timestamp keeps two runs of the same flow apart.
+    run_name = (_text(inp, "run_name") or f"{name}-{TIMESTAMP}").replace(TIMESTAMP, f"{started:%Y%m%d-%H%M%S}")
     ctx.trace.event("langfuse_evaluation", {"operation": "dataset_items", "items": len(items), "of": len(rows)})
     return {
         "dataset_name": name,

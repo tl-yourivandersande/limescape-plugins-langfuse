@@ -11,7 +11,7 @@
     },
     "dataset_name": {
       "label": "Datasetnaam",
-      "description": "Naam van de dataset in Langfuse. Een waarde 'dataset_name' in de flow-invoer gaat voor."
+      "description": "Naam van de dataset in Langfuse. Bij 'Dataset-items ophalen' gaat een waarde 'dataset_name' in de flow-invoer voor."
     },
     "dataset_version": {
       "label": "Datasetversie",
@@ -38,7 +38,7 @@
     },
     "run_name": {
       "label": "Runnaam",
-      "description": "Naam van het experiment in Langfuse. Alle items met dezelfde runnaam vormen samen één experiment. Bij 'Dataset-items ophalen': leeg = datasetnaam met datum en tijd. Een waarde 'run_name' in de flow-invoer gaat voor."
+      "description": "Naam van het experiment in Langfuse. Alle items met dezelfde runnaam vormen samen één experiment. Bij 'Dataset-items ophalen' wordt {timestamp} vervangen door datum en tijd van de start (UTC), bijvoorbeeld dossier-analyse-{timestamp}; leeg = datasetnaam-{timestamp}. De naam staat daarna in de uitvoer als run_name. Een waarde 'run_name' in de flow-invoer gaat daar voor. Geef in de andere acties de run_name uit die uitvoer door."
     },
     "run_description": {
       "label": "Omschrijving van de run"

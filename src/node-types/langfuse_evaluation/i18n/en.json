@@ -11,7 +11,7 @@
     },
     "dataset_name": {
       "label": "Dataset name",
-      "description": "Name of the dataset in Langfuse. A 'dataset_name' value in the flow input takes precedence."
+      "description": "Name of the dataset in Langfuse. For 'Get dataset items' a 'dataset_name' value in the flow input takes precedence."
     },
     "dataset_version": {
       "label": "Dataset version",
@@ -38,7 +38,7 @@
     },
     "run_name": {
       "label": "Run name",
-      "description": "Name of the experiment in Langfuse. All items with the same run name form one experiment. For 'Get dataset items': empty = dataset name with date and time. A 'run_name' value in the flow input takes precedence."
+      "description": "Name of the experiment in Langfuse. All items with the same run name form one experiment. For 'Get dataset items' {timestamp} is replaced by the date and time of the start (UTC), for example dossier-analyse-{timestamp}; empty = dataset name-{timestamp}. The name is then in the output as run_name. A 'run_name' value in the flow input takes precedence there. In the other operations pass on the run_name from that output."
     },
     "run_description": {
       "label": "Run description"

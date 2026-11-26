@@ -22,9 +22,14 @@ The metadata filter keeps items whose metadata has the given values: `{"split": 
 `{"dossier": ["D01", "D03"]}`; empty values are ignored. Turn off **Include input and expected output**
 to get only ids and metadata, and let a later step fetch each item with **Get one dataset item**.
 
-`dataset_name`, `dataset_version`, `metadata_filter`, `run_name` and `run_description` can also come from
+The result carries the `run_name` for the rest of the run. `{timestamp}` in the run name is replaced by the
+start of the run (UTC, `yyyymmdd-hhmmss`), so `dossier-analyse-{timestamp}` gives every run its own
+experiment; an empty run name means `<dataset name>-{timestamp}`.
+
+For this operation `dataset_name`, `dataset_version`, `metadata_filter` and `run_name` can also come from
 the flow input: a non-empty value under the same key in the flow state wins from the value on the node.
-That is how one flow serves both a full run and a run on a few items.
+That is how one flow serves both a full run and a run on a few items. The other operations do not look
+at the flow input; give them the values from this result.
 
 **Get one dataset item** can also put each field of the item input in the flow state as its own key.
 With prefix `eval_` an input `{"zaak": ..., "documenten": ...}` becomes `eval_zaak` and `eval_documenten`,
