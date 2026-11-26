@@ -55,6 +55,13 @@ output. **Started at** sets the start of the trace, so Langfuse shows how long t
 **Write scores on the experiment** attaches scores to the run as a whole, such as the share of items
 that passed every hard requirement.
 
+**Experiment storage** defaults to **Langfuse v4**. For a Langfuse instance that still uses legacy
+dataset runs, select **Legacy** on both experiment operations. The node records the trace, registers
+it on the dataset run through the legacy API, and returns Langfuse's run ID as `experiment_id` and
+the dataset comparison page as `experiment_url`. Run scores look up the run by dataset and run name.
+You can also pass the returned ID to the scoring node; give the dataset name in either case.
+This option is for instances that still write legacy dataset runs, not `events_only` deployments.
+
 ## How the trace is sent
 
 Langfuse links a trace to an experiment through span attributes on its OpenTelemetry endpoint. The node
@@ -63,7 +70,8 @@ with a child `experiment-item-task` that carries input, output, expected output,
 and the scores. The experiment id is derived from project, dataset and run name the way Langfuse does.
 
 Requests: `GET dataset-items`, `GET dataset-items/{id}`, `GET projects`, `GET score-configs`,
-`GET v2/datasets/{name}`, `POST otel/v1/traces`, `POST scores`, all under `<base URL>/api/public/`,
-with a 60 second timeout each.
+`GET v2/datasets/{name}`, `POST otel/v1/traces`, `POST scores`. Legacy storage additionally uses
+`POST dataset-run-items` and, for scoring by name, `GET datasets/{name}/runs/{runName}`. All requests
+go to `<base URL>/api/public/` with a 60 second timeout each.
 
 Errors name the HTTP status and what to check, never the response body.

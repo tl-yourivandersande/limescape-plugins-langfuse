@@ -279,6 +279,20 @@ async def _post_scores(langfuse: Langfuse, bodies: list[dict[str, Any]]) -> None
 # --- experiments --------------------------------------------------------------------
 
 
+def _experiment_storage(inp: NodeInput) -> str:
+    storage = _text(inp, "experiment_storage", "v4")
+    if storage not in {"v4", "legacy"}:
+        raise NodeInputError("experiment_storage must be v4 or legacy")
+    return storage
+
+
+def _legacy_experiment_url(langfuse: Langfuse, project_id: str, dataset_id: str, experiment: str) -> str:
+    return (
+        f"{langfuse.base_url}/project/{project_id}/datasets/{segment(dataset_id, 'dataset_id')}"
+        f"/compare?runs={segment(experiment, 'experiment_id')}"
+    )
+
+
 def _run_metadata(inp: NodeInput) -> dict[str, Any]:
     metadata = _structured(inp, "run_metadata") or {}
     if not isinstance(metadata, dict):
@@ -287,10 +301,12 @@ def _run_metadata(inp: NodeInput) -> dict[str, Any]:
 
 
 async def _experiment_item(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse) -> dict[str, Any]:
+    storage = _experiment_storage(inp)
     run_name = _required_text(inp, "run_name")
     item = _structured(inp, "item")
     if not isinstance(item, dict) or not item.get("id") or not item.get("dataset_id"):
         raise NodeInputError("item must be a dataset item as this node returns it, with id and dataset_id")
+    dataset_id = str(item["dataset_id"])
     error_message = _text(inp, "error_message") or None
     output = _value(inp, "output")
     if isinstance(output, str) and output.strip()[:1] in ("{", "["):
@@ -306,8 +322,11 @@ async def _experiment_item(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse)
     ended = _now()
     started = _timestamp(_text(inp, "started_at"), "started_at") or ended
     version = _timestamp(_text(inp, "dataset_version"), "dataset_version")
+    item_version = _iso(version) if version else None
+    run_description = _text(inp, "run_description") or None
+    run_metadata = _run_metadata(inp)
     project_id = await langfuse.project_id()
-    experiment = _otel.experiment_id(project_id, str(item["dataset_id"]), run_name)
+    experiment = _otel.experiment_id(project_id, dataset_id, run_name)
     trace_id, root_span_id, task_span_id = _otel.new_trace_id(), _otel.new_span_id(), _otel.new_span_id()
     await langfuse.request(
         "POST",
@@ -321,14 +340,14 @@ async def _experiment_item(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse)
             trace_name=_text(inp, "trace_name") or None,
             experiment=experiment,
             run_name=run_name,
-            run_description=_text(inp, "run_description") or None,
-            run_metadata=_run_metadata(inp),
-            dataset_id=str(item["dataset_id"]),
+            run_description=run_description,
+            run_metadata=run_metadata,
+            dataset_id=dataset_id,
             item_id=str(item["id"]),
             item_input=item.get("input"),
             item_expected_output=item.get("expected_output"),
             item_metadata=item.get("metadata") if isinstance(item.get("metadata"), dict) else {},
-            item_version=_iso(version) if version else None,
+            item_version=item_version,
             output=output,
             error_message=error_message,
             environment=_text(inp, "environment", _otel.DEFAULT_ENVIRONMENT),
@@ -336,6 +355,24 @@ async def _experiment_item(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse)
             ended_at=ended,
         ),
     )
+    experiment_url = None
+    if storage == "legacy":
+        registration = {
+            "datasetItemId": str(item["id"]),
+            "runName": run_name,
+            "runDescription": run_description,
+            "metadata": run_metadata,
+            "traceId": trace_id,
+            "datasetVersion": item_version,
+        }
+        run_item = await langfuse.request(
+            "POST", "dataset-run-items", body={key: value for key, value in registration.items() if value is not None}
+        )
+        legacy_run_id = run_item.get("datasetRunId") if isinstance(run_item, dict) else None
+        if not isinstance(legacy_run_id, str) or not legacy_run_id.strip():
+            raise NodeInputError("Langfuse did not return the legacy dataset run ID")
+        experiment = legacy_run_id
+        experiment_url = _legacy_experiment_url(langfuse, project_id, dataset_id, experiment)
     timestamp = _iso(ended)
     await _post_scores(
         langfuse,
@@ -362,22 +399,39 @@ async def _experiment_item(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse)
         "observation_id": task_span_id,
         "scores_written": len(scores),
         "trace_url": f"{langfuse.base_url}/project/{project_id}/traces/{trace_id}",
+        **({"experiment_url": experiment_url} if experiment_url else {}),
     }
 
 
 async def _experiment_scores(ctx: NodeContext, inp: NodeInput, langfuse: Langfuse) -> dict[str, Any]:
+    legacy = _experiment_storage(inp) == "legacy"
     scores = _scores(_structured(inp, "scores"))
     if not scores:
         raise NodeInputError("scores is required")
     experiment = _text(inp, "experiment_id")
     project_id = await langfuse.project_id()
-    if not experiment:
-        # Without an id from an earlier step: the same derivation, from dataset and run name.
-        dataset_name, run_name = _required_text(inp, "dataset_name"), _required_text(inp, "run_name")
-        dataset = await langfuse.request("GET", f"v2/datasets/{segment(dataset_name, 'dataset_name')}")
-        if not isinstance(dataset, dict) or not dataset.get("id"):
-            raise NodeInputError(f"Langfuse returned an unexpected answer for dataset '{dataset_name}'")
-        experiment = _otel.experiment_id(project_id, str(dataset["id"]), run_name)
+    dataset_id = ""
+    if legacy or not experiment:
+        dataset_name = _required_text(inp, "dataset_name")
+        run_name = _required_text(inp, "run_name") if not experiment else ""
+        dataset_path = f"datasets/{segment(dataset_name, 'dataset_name')}"
+        if legacy and not experiment:
+            run = await langfuse.request("GET", f"{dataset_path}/runs/{segment(run_name, 'run_name')}")
+            if not isinstance(run, dict) or not run.get("id") or not run.get("datasetId"):
+                raise NodeInputError("Langfuse did not return the legacy dataset run ID and dataset ID")
+            experiment, dataset_id = str(run["id"]), str(run["datasetId"])
+        else:
+            dataset = await langfuse.request("GET", f"v2/{dataset_path}")
+            if not isinstance(dataset, dict) or not dataset.get("id"):
+                raise NodeInputError(f"Langfuse returned an unexpected answer for dataset '{dataset_name}'")
+            dataset_id = str(dataset["id"])
+            if not experiment:
+                experiment = _otel.experiment_id(project_id, dataset_id, run_name)
+    experiment_url = (
+        _legacy_experiment_url(langfuse, project_id, dataset_id, experiment)
+        if legacy
+        else f"{langfuse.base_url}/project/{project_id}/experiments/results?baseline={experiment}"
+    )
     await _link_score_configs(langfuse, scores, _text(inp, "score_configs", "link"))
     timestamp = _iso(_now())
     await _post_scores(
@@ -393,7 +447,7 @@ async def _experiment_scores(ctx: NodeContext, inp: NodeInput, langfuse: Langfus
     return {
         "experiment_id": experiment,
         "scores_written": len(scores),
-        "experiment_url": f"{langfuse.base_url}/project/{project_id}/experiments/results?baseline={experiment}",
+        "experiment_url": experiment_url,
     }
 
 

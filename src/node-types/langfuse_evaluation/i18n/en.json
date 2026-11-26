@@ -9,6 +9,10 @@
     "operation": {
       "label": "Operation"
     },
+    "experiment_storage": {
+      "label": "Experiment storage",
+      "description": "Use Langfuse v4 by default. Choose Legacy to store runs in the old dataset Experiments tab. Use the same option when recording items and writing run scores."
+    },
     "dataset_name": {
       "label": "Dataset name",
       "description": "Name of the dataset in Langfuse. For 'Get dataset items' a 'dataset_name' value in the flow input takes precedence."
@@ -73,7 +77,7 @@
     },
     "experiment_id": {
       "label": "Experiment ID",
-      "description": "The experiment_id from 'Record experiment result'. Empty = derive it from dataset name and run name."
+      "description": "The experiment_id from 'Record experiment result'. Leave empty to resolve the run by dataset name and run name. Legacy also needs the dataset name when you provide the ID."
     },
     "score_configs": {
       "label": "Score configs",

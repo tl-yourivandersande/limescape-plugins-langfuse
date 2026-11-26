@@ -46,6 +46,16 @@ form:
         - {name: Next item of a list (loop), value: next_item}
         - {name: Record experiment result, value: experiment_item}
         - {name: Write scores on the experiment, value: experiment_scores}
+    - name: experiment_storage
+      type: select
+      label: Experiment storage
+      required: 0
+      default: v4
+      resolve_variables: false
+      choices:
+        - {name: Langfuse v4, value: v4}
+        - {name: Legacy, value: legacy}
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item, experiment_scores]}}
     - name: dataset_name
       type: text
       label: Dataset name

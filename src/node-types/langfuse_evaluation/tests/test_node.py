@@ -274,6 +274,29 @@ async def test_experiment_item_sends_the_trace_the_sdk_sends_and_scores_on_the_t
     assert SECRET not in json.dumps(result)
 
 
+async def test_experiment_item_legacy_registers_the_trace_as_a_dataset_run():
+    server = experiment_server({("POST", "dataset-run-items"): {
+        "status": 200, "json": {"id": "run-item-1", "datasetRunId": "legacy-run-1"},
+    }})
+
+    result = await run_node(NODE_DIR, context(server), params={
+        "operation": "experiment_item", "experiment_storage": "legacy", "run_name": "run",
+        "item": ITEM, "output": {"antwoord": "b"}, "run_description": "Fase A", "run_metadata": {"fase": "A"},
+        "dataset_version": "2026-10-27T07:52:00Z",
+    }, output_key="recorded")
+
+    assert [request["url"].rsplit("/api/public/", 1)[-1] for request in server.requests] == [
+        "projects", "otel/v1/traces", "dataset-run-items",
+    ]
+    out = result[0]["recorded"]
+    assert server.sent("POST", "dataset-run-items")[0]["json"] == {
+        "datasetItemId": ITEM["id"], "runName": "run", "runDescription": "Fase A", "metadata": {"fase": "A"},
+        "traceId": out["trace_id"], "datasetVersion": "2026-10-27T07:52:00.000000Z",
+    }
+    assert out["experiment_id"] == "legacy-run-1"
+    assert out["experiment_url"] == f"{BASE}/project/{PROJECT}/datasets/{DATASET_ID}/compare?runs=legacy-run-1"
+
+
 async def test_experiment_item_marks_a_failed_task_as_error():
     server = experiment_server()
 
@@ -313,6 +336,41 @@ async def test_experiment_scores_attach_to_the_experiment_of_dataset_and_run_nam
     assert (score["datasetRunId"], score["name"], score["value"], score["comment"]) == (experiment, "a_totaal", 0.8, "4/5")
     assert "traceId" not in score
     assert result[0]["run_scores"]["experiment_id"] == experiment
+
+
+async def test_experiment_scores_legacy_use_the_dataset_run_id_from_langfuse():
+    run_path = "datasets/voorbeeld%2Fset/runs/voorbeeld%20run"
+    server = experiment_server({("GET", run_path): {
+        "status": 200, "json": {"id": "legacy-run-1", "datasetId": DATASET_ID},
+    }})
+
+    result = await run_node(NODE_DIR, context(server), params={
+        "operation": "experiment_scores", "experiment_storage": "legacy", "dataset_name": "voorbeeld/set",
+        "run_name": "voorbeeld run", "scores": [{"name": "a_totaal", "value": 1}], "score_configs": "ignore",
+    }, output_key="run_scores")
+
+    assert server.sent("GET", run_path)
+    assert server.sent("POST", "scores")[0]["json"][0]["datasetRunId"] == "legacy-run-1"
+    assert result == [{"run_scores": {
+        "experiment_id": "legacy-run-1", "scores_written": 1,
+        "experiment_url": f"{BASE}/project/{PROJECT}/datasets/{DATASET_ID}/compare?runs=legacy-run-1",
+    }}]
+
+
+async def test_experiment_scores_legacy_can_use_a_given_run_id_with_a_dataset_name():
+    server = experiment_server({("GET", "v2/datasets/voorbeeld-set"): {
+        "status": 200, "json": {"id": DATASET_ID},
+    }})
+
+    result = await run_node(NODE_DIR, context(server), params={
+        "operation": "experiment_scores", "experiment_storage": "legacy", "dataset_name": "voorbeeld-set",
+        "experiment_id": "legacy-run-1", "scores": [{"name": "a_totaal", "value": 1}], "score_configs": "ignore",
+    }, output_key="run_scores")
+
+    assert server.sent("POST", "scores")[0]["json"][0]["datasetRunId"] == "legacy-run-1"
+    assert result[0]["run_scores"]["experiment_url"] == (
+        f"{BASE}/project/{PROJECT}/datasets/{DATASET_ID}/compare?runs=legacy-run-1"
+    )
 
 
 async def test_experiment_scores_use_a_given_experiment_id_without_looking_up_the_dataset():

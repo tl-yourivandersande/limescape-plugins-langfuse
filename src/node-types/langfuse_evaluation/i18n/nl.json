@@ -9,6 +9,10 @@
     "operation": {
       "label": "Actie"
     },
+    "experiment_storage": {
+      "label": "Opslagmethode",
+      "description": "Standaard gebruik je Langfuse v4. Kies Legacy om runs in het oude tabblad Experiments van de dataset op te slaan. Kies dezelfde optie bij het vastleggen van items en het schrijven van runscores."
+    },
     "dataset_name": {
       "label": "Datasetnaam",
       "description": "Naam van de dataset in Langfuse. Bij 'Dataset-items ophalen' gaat een waarde 'dataset_name' in de flow-invoer voor."
@@ -73,7 +77,7 @@
     },
     "experiment_id": {
       "label": "Experiment-ID",
-      "description": "Het experiment_id uit 'Experimentresultaat vastleggen'. Leeg = afleiden uit datasetnaam en runnaam."
+      "description": "Het experiment_id uit 'Experimentresultaat vastleggen'. Laat leeg om de run via datasetnaam en runnaam te vinden. Bij Legacy is ook met een ingevuld ID de datasetnaam nodig."
     },
     "score_configs": {
       "label": "Score-configuraties",
