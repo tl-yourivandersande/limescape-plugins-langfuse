@@ -191,7 +191,7 @@ form:
     - id: tab-settings
       sections:
         - id: section-properties
-          fields: [credential_code, operation, dataset_name, dataset_version, metadata_filter, include_content,
-                   item_id, state_key_prefix, items, run_name, run_description, run_metadata, trace_name, item,
-                   output, scores, started_at, error_message, experiment_id, score_configs, environment,
-                   input_keys, output_key]
+          fields: [credential_code, operation, experiment_storage, dataset_name, dataset_version, metadata_filter,
+                   include_content, item_id, state_key_prefix, items, run_name, run_description, run_metadata,
+                   trace_name, item, output, scores, started_at, error_message, experiment_id, score_configs,
+                   environment, input_keys, output_key]

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from limescape_plugin_sdk import CapabilityError, NodeInput
 from limescape_plugin_sdk.loader import load_execute
+from limescape_plugin_sdk.manifest import load_manifest
 from limescape_plugin_sdk.testing import FakeContext, run_node
 from limescape_plugin_sdk.testing.runner import run_execute
 
@@ -34,6 +35,17 @@ SDK_TASK_SPAN_KEYS = {
     "langfuse.observation.metadata.dataset_id",
     "langfuse.observation.metadata.dataset_item_id",
 }
+
+
+def test_experiment_storage_is_in_the_studio_form_layout():
+    manifest = load_manifest(NODE_DIR / "node-type.yaml")
+    fields = {
+        field_name
+        for tab in manifest.form.layout
+        for section in tab["sections"]
+        for field_name in section["fields"]
+    }
+    assert "experiment_storage" in fields
 
 
 def row(number: int, *, split: str = "ontwikkel", status: str = "ACTIVE") -> dict:
