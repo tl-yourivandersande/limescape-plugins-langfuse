@@ -1,0 +1,43 @@
+{
+  "name": "Juridische Adviseur: controles fase A",
+  "description": "Kijk een dossieranalyse (fase A) na met de vaste controles en vat een run samen.",
+  "fields": {
+    "operation": {
+      "label": "Actie"
+    },
+    "item": {
+      "label": "Dataset-item",
+      "description": "Het dossier uit de dataset met input, expected_output en metadata, bijvoorbeeld {{ dataset_item_ophalen }}."
+    },
+    "analysis": {
+      "label": "Dossieranalyse",
+      "description": "De uitvoer van de agent-aanroep, bijvoorbeeld {{ dossieranalyse_uitvoeren }}. De node zoekt daarin de uitkomst van 'Analyse afronden eval'. Is de aanroep mislukt, dan komt dat als task_error in de uitvoer en zijn er geen scores."
+    },
+    "analysis_format": {
+      "label": "Vorm van de analyse",
+      "description": "Uitvoer van de Limescape-agent wordt eerst omgezet naar het uitvoercontract. Kies 'al in het uitvoercontract' voor een andere oplossing die het contract zelf teruggeeft."
+    },
+    "results": {
+      "label": "Resultaten per dossier",
+      "description": "De uitvoer van 'Dossier controleren' voor alle dossiers van de run, bijvoorbeeld de uitvoer van de agent-aanroep in de lus."
+    },
+    "expected_items": {
+      "label": "Dataset-items van de run",
+      "description": "De items waarop de run moest draaien, bijvoorbeeld {{ dataset_ophalen.items }}. Hiermee meldt de samenvatting welke dossiers niet gedraaid zijn."
+    },
+    "baseline": {
+      "label": "Goedgekeurde stand (baseline)",
+      "description": "De inhoud van fase-a/approved-baseline.json. Een dossier dat daarin alle harde eisen haalde en nu niet, is terugval. Leeg = geen vergelijking."
+    },
+    "fail_on_regression": {
+      "label": "Laten falen bij terugval",
+      "description": "Aan = de node faalt bij terugval, een niet-gedraaid dossier of een mislukte analyse, en de flow stopt. Uit = de uitkomst staat in gate_passed."
+    },
+    "input_keys": {
+      "label": "Invoersleutels"
+    },
+    "output_key": {
+      "label": "Uitvoersleutel"
+    }
+  }
+}

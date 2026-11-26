@@ -1,0 +1,93 @@
+{
+  "name": "Langfuse-evaluatie",
+  "description": "Haal de items van een Langfuse-dataset op en leg experimentresultaten en scores vast.",
+  "fields": {
+    "credential_code": {
+      "label": "Langfuse-credential",
+      "description": "Leeg = de Langfuse-koppeling uit de teaminstellingen."
+    },
+    "operation": {
+      "label": "Actie"
+    },
+    "dataset_name": {
+      "label": "Datasetnaam",
+      "description": "Naam van de dataset in Langfuse. Een waarde 'dataset_name' in de flow-invoer gaat voor."
+    },
+    "dataset_version": {
+      "label": "Datasetversie",
+      "description": "Tijdstip (ISO, bijvoorbeeld 2026-10-27T07:52:00Z) waarop de dataset wordt gelezen. Leeg = nu. Geef de versie uit 'Dataset-items ophalen' door aan 'Experimentresultaat vastleggen', dan staat hij op het experiment."
+    },
+    "metadata_filter": {
+      "label": "Metadata-filter",
+      "description": "JSON-object: alleen items waarvan de metadata deze waarden heeft, bijvoorbeeld {\"split\": \"test\"} of {\"dossier\": [\"D01\", \"D03\"]}. Leeg = alle actieve items. Een waarde 'metadata_filter' in de flow-invoer gaat voor."
+    },
+    "include_content": {
+      "label": "Invoer en verwachte uitvoer meenemen",
+      "description": "Uit = alleen id en metadata per item. Gebruik dat als een volgende stap elk item apart ophaalt, dan blijft de flow-state klein."
+    },
+    "item_id": {
+      "label": "Dataset-item-ID"
+    },
+    "state_key_prefix": {
+      "label": "Voorvoegsel voor invoervelden in de flow-state",
+      "description": "Zet elk veld van de item-invoer ook als eigen sleutel in de flow-state, met dit voorvoegsel. Met 'eval_' wordt invoerveld 'zaak' de sleutel 'eval_zaak'. Nodig als een aangeroepen agent zijn invoer uit losse sleutels leest."
+    },
+    "items": {
+      "label": "Items",
+      "description": "De lijst waar de lus doorheen loopt, bijvoorbeeld {{ dataset_ophalen.items }}. Elke keer dat de node draait geeft hij het volgende item; na het laatste is 'done' waar."
+    },
+    "run_name": {
+      "label": "Runnaam",
+      "description": "Naam van het experiment in Langfuse. Alle items met dezelfde runnaam vormen samen één experiment. Bij 'Dataset-items ophalen': leeg = datasetnaam met datum en tijd. Een waarde 'run_name' in de flow-invoer gaat voor."
+    },
+    "run_description": {
+      "label": "Omschrijving van de run"
+    },
+    "run_metadata": {
+      "label": "Metadata van de run",
+      "description": "JSON-object dat bij het experiment wordt bewaard, bijvoorbeeld de versie van de agent en van de controles."
+    },
+    "trace_name": {
+      "label": "Naam van de trace",
+      "description": "Bijvoorbeeld 'dossier-analyse D01'. Leeg = experiment-item-run."
+    },
+    "item": {
+      "label": "Dataset-item",
+      "description": "Het item zoals deze node het teruggeeft, bijvoorbeeld {{ dataset_item_ophalen }}."
+    },
+    "output": {
+      "label": "Uitvoer",
+      "description": "Wat de oplossing voor dit item teruggaf. Dit wordt de uitvoer van de trace in Langfuse."
+    },
+    "scores": {
+      "label": "Scores",
+      "description": "Lijst met {name, value, data_type, comment, metadata}. Een waarde true of false wordt een goed/fout-score, een getal een numerieke score."
+    },
+    "started_at": {
+      "label": "Gestart om",
+      "description": "Tijdstip (ISO) waarop het werk aan dit item begon, bijvoorbeeld {{ dataset_item_ophalen.fetched_at }}. Bepaalt de duur die Langfuse toont. Leeg = nu."
+    },
+    "error_message": {
+      "label": "Foutmelding",
+      "description": "Vul in als de oplossing op dit item is mislukt. De trace krijgt dan niveau ERROR."
+    },
+    "experiment_id": {
+      "label": "Experiment-ID",
+      "description": "Het experiment_id uit 'Experimentresultaat vastleggen'. Leeg = afleiden uit datasetnaam en runnaam."
+    },
+    "score_configs": {
+      "label": "Score-configuraties",
+      "description": "Koppelt elke score aan de score config met dezelfde naam in Langfuse. 'Verplicht' laat de node falen als er een ontbreekt."
+    },
+    "environment": {
+      "label": "Omgeving",
+      "description": "De Langfuse-omgeving van de trace. De Langfuse-SDK gebruikt sdk-experiment."
+    },
+    "input_keys": {
+      "label": "Invoersleutels"
+    },
+    "output_key": {
+      "label": "Uitvoersleutel"
+    }
+  }
+}

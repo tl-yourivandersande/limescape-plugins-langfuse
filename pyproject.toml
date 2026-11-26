@@ -1,0 +1,54 @@
+[project]
+name = "limescape-plugins-langfuse"
+version = "0.0.0"
+description = "Limescape plugin node types for running evaluations with Langfuse"
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "limescape-plugin-sdk==1.64.7",
+    # Runtime dependency of juridische_adviseur_fase_a (declared in its manifest); here so the tests can import it.
+    "jsonschema>=4.23",
+    "pytest>=8.3",
+    "pytest-asyncio>=1.3",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "bandit>=1.7",
+    "pip-audit>=2.7",
+    "pip-licenses>=5.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["src/node-types"]
+addopts = "--import-mode=importlib"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+# Generated from the evals repository (scripts/sync_fase_a_checks.py); style is decided there.
+extend-exclude = [
+    "src/node-types/juridische_adviseur_fase_a/_evaluators.py",
+    "src/node-types/juridische_adviseur_fase_a/_contract.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+# Assertions on whole requests and results read better on one line.
+"**/tests/*.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+explicit_package_bases = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]

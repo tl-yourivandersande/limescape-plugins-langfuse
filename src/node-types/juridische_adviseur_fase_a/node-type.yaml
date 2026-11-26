@@ -1,0 +1,84 @@
+schema_version: 1
+code: juridische_adviseur_fase_a
+name: Juridische Adviseur fase A checks
+description: Check a dossier analysis (fase A) against the fixed rules and summarise a run.
+category: integrations
+icon:
+  lucide: clipboard-check
+availability: general
+stage: beta
+runtime:
+  execution_mode: stream
+  trace: decorator
+  manages_output_keys: false
+  isolation: shared
+  timeout_seconds: 120
+capabilities: []
+dependencies: ["jsonschema>=4.23"]
+io:
+  input_data: {}
+  output_data:
+    result: Per dossier the output contract and the a_ scores, or per run the two totals and the regression check.
+form:
+  fields:
+    - name: operation
+      type: select
+      label: Operation
+      required: 1
+      default: checks
+      choices:
+        - {name: Check one dossier, value: checks}
+        - {name: Summarise the run, value: run_summary}
+    - name: item
+      type: json
+      label: Dataset item
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [checks]}}
+    - name: analysis
+      type: json
+      label: Dossier analysis
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [checks]}}
+    - name: analysis_format
+      type: select
+      label: Format of the analysis
+      required: 0
+      default: agent
+      choices:
+        - {name: Output of the Limescape agent, value: agent}
+        - {name: Already in the output contract, value: contract}
+      depends_on: {visible_when: {field_name: operation, field_value: [checks]}}
+    - name: results
+      type: json
+      label: Results per dossier
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [run_summary]}}
+    - name: expected_items
+      type: json
+      label: Dataset items of the run
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [run_summary]}}
+    - name: baseline
+      type: json
+      label: Approved baseline
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [run_summary]}}
+    - name: fail_on_regression
+      type: checkbox
+      label: Fail on regression
+      required: 0
+      default: false
+      depends_on: {visible_when: {field_name: operation, field_value: [run_summary]}}
+    - {name: input_keys, type: text, label: Input keys, required: 0, default: ''}
+    - {name: output_key, type: text, label: Output key, required: 0, default: result}
+  layout:
+    - id: tab-settings
+      sections:
+        - id: section-properties
+          fields: [operation, item, analysis, analysis_format, results, expected_items, baseline, fail_on_regression,
+                   input_keys, output_key]

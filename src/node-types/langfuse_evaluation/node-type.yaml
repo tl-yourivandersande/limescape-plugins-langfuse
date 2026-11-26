@@ -1,0 +1,187 @@
+schema_version: 1
+code: langfuse_evaluation
+name: Langfuse evaluation
+description: Read the items of a Langfuse dataset and record experiment results and scores.
+category: integrations
+icon:
+  lucide: flask-conical
+availability: general
+stage: beta
+runtime:
+  execution_mode: stream
+  trace: decorator
+  manages_output_keys: false
+  isolation: shared
+  timeout_seconds: 300
+capabilities: [credentials, http]
+dependencies: []
+io:
+  input_data: {}
+  output_data:
+    result: The result of the chosen operation; see the README for the shape per operation.
+form:
+  fields:
+    - name: credential_code
+      type: select
+      label: Langfuse credential
+      required: 0
+      default: ''
+      resolve_variables: false
+      choices: []
+      lookup:
+        app_label: credentials
+        model_name: Credential
+        filter_operator: and
+        filter: {team: current_team_id, is_active: true, user__isnull: true, credential_type__name: langfuseApi}
+        field_value: code
+        field_display: name
+    - name: operation
+      type: select
+      label: Operation
+      required: 1
+      default: dataset_items
+      choices:
+        - {name: Get dataset items, value: dataset_items}
+        - {name: Get one dataset item, value: dataset_item}
+        - {name: Next item of a list (loop), value: next_item}
+        - {name: Record experiment result, value: experiment_item}
+        - {name: Write scores on the experiment, value: experiment_scores}
+    - name: dataset_name
+      type: text
+      label: Dataset name
+      required: 0
+      default: ''
+      max_length: 200
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_items, experiment_scores]}}
+    - name: dataset_version
+      type: text
+      label: Dataset version
+      required: 0
+      default: ''
+      max_length: 40
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_items, experiment_item]}}
+    - name: metadata_filter
+      type: json
+      label: Metadata filter
+      required: 0
+      default: '{}'
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_items]}}
+    - name: include_content
+      type: checkbox
+      label: Include input and expected output
+      required: 0
+      default: true
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_items]}}
+    - name: item_id
+      type: text
+      label: Dataset item ID
+      required: 0
+      default: ''
+      max_length: 200
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_item]}}
+    - name: state_key_prefix
+      type: text
+      label: Prefix for input fields in the flow state
+      required: 0
+      default: ''
+      max_length: 40
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_item]}}
+    - name: items
+      type: json
+      label: Items
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [next_item]}}
+    - name: run_name
+      type: text
+      label: Run name
+      required: 0
+      default: ''
+      max_length: 200
+      depends_on: {visible_when: {field_name: operation, field_value: [dataset_items, experiment_item, experiment_scores]}}
+    - name: run_description
+      type: text
+      label: Run description
+      required: 0
+      default: ''
+      max_length: 500
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: run_metadata
+      type: json
+      label: Run metadata
+      required: 0
+      default: '{}'
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: trace_name
+      type: text
+      label: Trace name
+      required: 0
+      default: ''
+      max_length: 200
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: item
+      type: json
+      label: Dataset item
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: output
+      type: json
+      label: Output
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: scores
+      type: json
+      label: Scores
+      required: 0
+      default: ''
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item, experiment_scores]}}
+    - name: started_at
+      type: text
+      label: Started at
+      required: 0
+      default: ''
+      max_length: 40
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: error_message
+      type: text
+      label: Error message
+      required: 0
+      default: ''
+      max_length: 1000
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - name: experiment_id
+      type: text
+      label: Experiment ID
+      required: 0
+      default: ''
+      max_length: 64
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_scores]}}
+    - name: score_configs
+      type: select
+      label: Score configs
+      required: 0
+      default: link
+      choices:
+        - {name: Link when a config with the same name exists, value: link}
+        - {name: Require a config for every score, value: require}
+        - {name: Do not link, value: ignore}
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item, experiment_scores]}}
+    - name: environment
+      type: text
+      label: Environment
+      required: 0
+      default: sdk-experiment
+      max_length: 40
+      depends_on: {visible_when: {field_name: operation, field_value: [experiment_item]}}
+    - {name: input_keys, type: text, label: Input keys, required: 0, default: ''}
+    - {name: output_key, type: text, label: Output key, required: 0, default: result}
+  layout:
+    - id: tab-settings
+      sections:
+        - id: section-properties
+          fields: [credential_code, operation, dataset_name, dataset_version, metadata_filter, include_content,
+                   item_id, state_key_prefix, items, run_name, run_description, run_metadata, trace_name, item,
+                   output, scores, started_at, error_message, experiment_id, score_configs, environment,
+                   input_keys, output_key]

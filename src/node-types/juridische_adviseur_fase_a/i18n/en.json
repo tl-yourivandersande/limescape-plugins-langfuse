@@ -1,0 +1,43 @@
+{
+  "name": "Juridische Adviseur: fase A checks",
+  "description": "Check a dossier analysis (fase A) against the fixed rules and summarise a run.",
+  "fields": {
+    "operation": {
+      "label": "Operation"
+    },
+    "item": {
+      "label": "Dataset item",
+      "description": "The dossier from the dataset with input, expected_output and metadata, for example {{ dataset_item_ophalen }}."
+    },
+    "analysis": {
+      "label": "Dossier analysis",
+      "description": "The output of the agent call, for example {{ dossieranalyse_uitvoeren }}. The node looks up the result of 'Analyse afronden eval' in it. When the call failed, the output has a task_error and no scores."
+    },
+    "analysis_format": {
+      "label": "Format of the analysis",
+      "description": "Output of the Limescape agent is first converted to the output contract. Choose 'already in the output contract' for another solution that returns the contract itself."
+    },
+    "results": {
+      "label": "Results per dossier",
+      "description": "The output of 'Check one dossier' for all dossiers of the run, for example the output of the agent call in the loop."
+    },
+    "expected_items": {
+      "label": "Dataset items of the run",
+      "description": "The items the run had to cover, for example {{ dataset_ophalen.items }}. The summary uses it to report dossiers that did not run."
+    },
+    "baseline": {
+      "label": "Approved baseline",
+      "description": "The content of fase-a/approved-baseline.json. A dossier that met all hard requirements there and does not now is a regression. Empty = no comparison."
+    },
+    "fail_on_regression": {
+      "label": "Fail on regression",
+      "description": "On = the node fails on a regression, a dossier that did not run or a failed analysis, and the flow stops. Off = the outcome is in gate_passed."
+    },
+    "input_keys": {
+      "label": "Input keys"
+    },
+    "output_key": {
+      "label": "Output key"
+    }
+  }
+}

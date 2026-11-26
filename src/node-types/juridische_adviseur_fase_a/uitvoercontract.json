@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Uitvoercontract dossieranalyse fase A",
+  "description": "Wat een oplossing voor fase A per dossier teruggeeft. Elke bevinding verwijst met document_id naar een stuk uit input.documenten. Wat niet in het dossier staat is null of 'niet gevonden', nooit ingevuld. Er is bewust geen veld voor een uitkomst of juridisch oordeel. Velden van zaakoverzicht en primair_besluit zijn voorlopig tot de veldenlijsten (ADO 177475 en 177474) vastliggen.",
+  "type": "object",
+  "required": ["zaakoverzicht", "documenten", "primair_besluit", "bezwaargronden", "feiten", "partijstandpunten", "tijdlijn"],
+  "additionalProperties": false,
+  "$defs": {
+    "document_id": {"type": "string", "description": "ID uit input.documenten, bijvoorbeeld D01-03"},
+    "bevinding": {
+      "type": "object",
+      "required": ["tekst", "document_id"],
+      "properties": {
+        "tekst": {"type": "string"},
+        "document_id": {"$ref": "#/$defs/document_id"}
+      }
+    },
+    "bevinding_met_actor": {
+      "type": "object",
+      "required": ["tekst", "actor", "document_id"],
+      "properties": {
+        "tekst": {"type": "string"},
+        "actor": {"type": ["string", "null"], "description": "Wie het stelt; null als dat niet betrouwbaar vast te stellen is"},
+        "document_id": {"$ref": "#/$defs/document_id"}
+      }
+    }
+  },
+  "properties": {
+    "zaakoverzicht": {
+      "type": "object",
+      "description": "Sectie 1. Uit het zaaksysteem (ZGW); veldnamen volgen de veldenlijst.",
+      "additionalProperties": {"type": ["string", "null"]}
+    },
+    "documenten": {
+      "type": "array",
+      "description": "Sectie 2. Elk aangeleverd document precies één keer.",
+      "items": {
+        "type": "object",
+        "required": ["document_id", "naam"],
+        "properties": {
+          "document_id": {"$ref": "#/$defs/document_id"},
+          "naam": {"type": "string"},
+          "datum": {"type": ["string", "null"]},
+          "status": {"type": ["string", "null"]},
+          "type": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "primair_besluit": {
+      "type": "object",
+      "description": "Sectie 3. Alleen wat in het primaire besluit staat.",
+      "required": ["document_id", "genoemde_grondslagen"],
+      "properties": {
+        "document_id": {"type": ["string", "null"], "description": "Document met het primaire besluit; null als het niet is aangetroffen"},
+        "besloten": {"type": ["string", "null"]},
+        "aanleiding": {"type": ["string", "null"]},
+        "genoemde_grondslagen": {"type": "array", "items": {"$ref": "#/$defs/bevinding"},
+                                 "description": "Letterlijk zoals in het besluit genoemd; leeg als er geen worden genoemd"},
+        "bedragen": {"type": "array", "items": {"$ref": "#/$defs/bevinding"}},
+        "datums": {"type": "array", "items": {"$ref": "#/$defs/bevinding"}}
+      }
+    },
+    "bezwaargronden": {"type": "array", "description": "Sectie 4. Gronden zoals de bezwaarmaker ze aanvoert.", "items": {"$ref": "#/$defs/bevinding_met_actor"}},
+    "feiten": {"type": "array", "description": "Sectie 5. Feitelijke beweringen uit het dossier.", "items": {"$ref": "#/$defs/bevinding"}},
+    "partijstandpunten": {"type": "array", "description": "Sectie 5. Verklaringen, argumenten, betwistingen en verzoeken per actor.", "items": {"$ref": "#/$defs/bevinding_met_actor"}},
+    "tijdlijn": {
+      "type": "array",
+      "description": "Sectie 6. Gebeurtenissen met datum en bron.",
+      "items": {
+        "type": "object",
+        "required": ["datum", "gebeurtenis", "document_id"],
+        "properties": {
+          "datum": {"type": ["string", "null"]},
+          "gebeurtenis": {"type": "string"},
+          "document_id": {"$ref": "#/$defs/document_id"}
+        }
+      }
+    }
+  }
+}

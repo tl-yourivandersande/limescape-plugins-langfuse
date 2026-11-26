@@ -1,0 +1,93 @@
+{
+  "name": "Langfuse evaluation",
+  "description": "Read the items of a Langfuse dataset and record experiment results and scores.",
+  "fields": {
+    "credential_code": {
+      "label": "Langfuse credential",
+      "description": "Empty = the Langfuse connection from the team settings."
+    },
+    "operation": {
+      "label": "Operation"
+    },
+    "dataset_name": {
+      "label": "Dataset name",
+      "description": "Name of the dataset in Langfuse. A 'dataset_name' value in the flow input takes precedence."
+    },
+    "dataset_version": {
+      "label": "Dataset version",
+      "description": "Moment (ISO, for example 2026-10-27T07:52:00Z) at which the dataset is read. Empty = now. Pass the version from 'Get dataset items' on to 'Record experiment result' to store it on the experiment."
+    },
+    "metadata_filter": {
+      "label": "Metadata filter",
+      "description": "JSON object: only items whose metadata has these values, for example {\"split\": \"test\"} or {\"dossier\": [\"D01\", \"D03\"]}. Empty = all active items. A 'metadata_filter' value in the flow input takes precedence."
+    },
+    "include_content": {
+      "label": "Include input and expected output",
+      "description": "Off = only id and metadata per item. Use it when a later step fetches each item separately, so the flow state stays small."
+    },
+    "item_id": {
+      "label": "Dataset item ID"
+    },
+    "state_key_prefix": {
+      "label": "Prefix for input fields in the flow state",
+      "description": "Also puts every field of the item input in the flow state as its own key, with this prefix. With 'eval_' the input field 'zaak' becomes the key 'eval_zaak'. Needed when a called agent reads its input from separate keys."
+    },
+    "items": {
+      "label": "Items",
+      "description": "The list the loop steps through, for example {{ dataset_ophalen.items }}. Each time the node runs it returns the next item; after the last one 'done' is true."
+    },
+    "run_name": {
+      "label": "Run name",
+      "description": "Name of the experiment in Langfuse. All items with the same run name form one experiment. For 'Get dataset items': empty = dataset name with date and time. A 'run_name' value in the flow input takes precedence."
+    },
+    "run_description": {
+      "label": "Run description"
+    },
+    "run_metadata": {
+      "label": "Run metadata",
+      "description": "JSON object stored with the experiment, for example the version of the agent and of the checks."
+    },
+    "trace_name": {
+      "label": "Trace name",
+      "description": "For example 'dossier-analyse D01'. Empty = experiment-item-run."
+    },
+    "item": {
+      "label": "Dataset item",
+      "description": "The item as this node returns it, for example {{ dataset_item_ophalen }}."
+    },
+    "output": {
+      "label": "Output",
+      "description": "What the solution returned for this item. It becomes the output of the trace in Langfuse."
+    },
+    "scores": {
+      "label": "Scores",
+      "description": "List of {name, value, data_type, comment, metadata}. A true or false value becomes a boolean score, a number a numeric score."
+    },
+    "started_at": {
+      "label": "Started at",
+      "description": "Moment (ISO) at which work on this item started, for example {{ dataset_item_ophalen.fetched_at }}. Sets the duration Langfuse shows. Empty = now."
+    },
+    "error_message": {
+      "label": "Error message",
+      "description": "Fill in when the solution failed on this item. The trace then gets level ERROR."
+    },
+    "experiment_id": {
+      "label": "Experiment ID",
+      "description": "The experiment_id from 'Record experiment result'. Empty = derive it from dataset name and run name."
+    },
+    "score_configs": {
+      "label": "Score configs",
+      "description": "Links every score to the score config with the same name in Langfuse. 'Require' makes the node fail when one is missing."
+    },
+    "environment": {
+      "label": "Environment",
+      "description": "The Langfuse environment of the trace. The Langfuse SDK uses sdk-experiment."
+    },
+    "input_keys": {
+      "label": "Input keys"
+    },
+    "output_key": {
+      "label": "Output key"
+    }
+  }
+}
